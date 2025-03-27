@@ -1,0 +1,27 @@
+# From the DotNet directory
+DotNet/LoanManagement.API/.vs
+DotNet/LoanManagement.API/bin
+DotNet/LoanManagement.API/obj
+DotNet/LoanManagement.API/appsettings.Development.json
+DotNet/LoanManagement.API/appsettings.json
+
+# From the NodeJS directory
+NodeJS/loan-service/node_modules
+NodeJS/loan-service/logs
+NodeJS/loan-service/*.log
+
+# From the ReactJS directory
+ReactJS/loan-management-client/node_modules
+ReactJS/loan-management-client/build
+ReactJS/loan-management-client/public/assets
+ReactJS/loan-management-client/public/assets/images
+ReactJS/loan-management-client/public/assets/images/logo.png
+
+# From new ReactJS directory
+ReactJS/loan-management-client-new/node_modules
+ReactJS/loan-management-client-new/build
+ReactJS/loan-management-client-new/public/assets
+ReactJS/loan-management-client-new/public/assets/images
+ReactJS/loan-management-client-new/public/assets/images/logo.png
+
+node_modules/

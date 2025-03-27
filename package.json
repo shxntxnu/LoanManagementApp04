@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "msnodesqlv8": "^4.5.0",
+    "mssql": "^10.0.1",
+    "sequelize": "^6.32.1",
+    "sqlite3": "^5.1.7",
+    "tedious": "^16.6.1"
+  }
+}
