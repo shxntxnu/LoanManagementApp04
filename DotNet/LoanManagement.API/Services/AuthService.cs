@@ -34,7 +34,7 @@ namespace LoanManagement.API.Services
 
             return new AuthResponse
             {
-                UserId = user.Id,
+                UserId = user.Id, // No need to convert between Guid and string
                 Name = user.Name,
                 Email = user.Email,
                 Role = user.Role,
@@ -67,7 +67,7 @@ namespace LoanManagement.API.Services
 
             return new AuthResponse
             {
-                UserId = user.Id,
+                UserId = user.Id, // No need to convert between Guid and string
                 Name = user.Name,
                 Email = user.Email,
                 Role = user.Role,

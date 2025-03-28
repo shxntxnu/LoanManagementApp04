@@ -38,8 +38,8 @@ namespace LoanManagement.API.Data
                 .IsRequired()
                 .HasMaxLength(20);
 
-            // Seed initial admin user with a fixed Guid
-            var adminId = new Guid("11111111-1111-1111-1111-111111111111");
+            // Seed initial admin user with a fixed string ID
+            var adminId = Guid.NewGuid().ToString(); // Generate a new string ID
             modelBuilder.Entity<User>().HasData(
                 new User
                 {

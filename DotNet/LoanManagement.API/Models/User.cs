@@ -8,19 +8,13 @@ namespace LoanManagement.API.Models
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
-        public string Id { get; set; }
+        public string? Id { get; set; }
 
-        [Required]
-        [StringLength(100)]
-        public string Name { get; set; }
-
-        [Required]
-        public string Email { get; set; }
-
-        [Required]
-        public string Password { get; set; }
-
-        [Required]
-        public string Role { get; set; }
+        public string? Name { get; set; }
+        public string? Email { get; set; }
+        public string? Password { get; set; }
+        public string? Role { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow; // Default to current time
+        public DateTime? LastLoginAt { get; set; } // Nullable, as it may not be set initially
     }
 }
