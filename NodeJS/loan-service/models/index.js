@@ -1,18 +1,10 @@
-const Loan = require('./loan');
-const Payment = require('./Payment');
+const Loan = require('./Loan');
+const Payment = require('./payment');
 
-// Define relationships
-Loan.hasMany(Payment, {
-    foreignKey: 'loanId',
-    as: 'payments'
-});
-
-Payment.belongsTo(Loan, {
-    foreignKey: 'loanId',
-    as: 'loan'
-});
+// Relationships in Mongoose are defined using references in schemas.
+// The `loanId` field in the Payment schema already references the Loan model.
 
 module.exports = {
     Loan,
     Payment
-}; 
+};

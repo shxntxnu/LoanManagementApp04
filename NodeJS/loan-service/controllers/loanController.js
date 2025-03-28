@@ -1,104 +1,54 @@
-const { Loan } = require('../models');
-const { Op } = require('sequelize');
+const Loan = require('../models/Loan');
 
 // Get all loans
-const getAllLoans = async (req, res) => {
+exports.getLoans = async (req, res) => {
     try {
-        const loans = await Loan.findAll();
-        res.json(loans);
+        const loans = await Loan.find();
+        res.status(200).json(loans);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ message: 'Server error', error });
     }
 };
 
-// Get loan by ID
-const getLoanById = async (req, res) => {
+// Get a single loan by ID
+exports.getLoanById = async (req, res) => {
     try {
-        const loan = await Loan.findByPk(req.params.id);
-        if (!loan) {
-            return res.status(404).json({ message: 'Loan not found' });
-        }
-        res.json(loan);
+        const loan = await Loan.findById(req.params.id);
+        if (!loan) return res.status(404).json({ message: 'Loan not found' });
+        res.status(200).json(loan);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ message: 'Server error', error });
     }
 };
 
-// Create new loan application
-const applyLoan = async (req, res) => {
+// Create a new loan
+exports.createLoan = async (req, res) => {
     try {
-        const { amount, termMonths } = req.body;
-        const userId = req.user.id; // Assuming user info is added by auth middleware
-
-        // Validate loan amount
-        if (amount < 1000) {
-            return res.status(400).json({ message: 'Minimum loan amount is $1,000' });
-        }
-
-        // Validate term
-        if (termMonths < 1 || termMonths > 60) {
-            return res.status(400).json({ message: 'Loan term must be between 1 and 60 months' });
-        }
-
-        // Calculate interest rate (simple example - in real app, this would be more complex)
-        const interestRate = 5.0; // 5% annual interest rate
-
-        // Calculate monthly payment (simple calculation - in real app, use proper amortization)
-        const monthlyInterestRate = interestRate / 12 / 100;
-        const monthlyPayment = (amount * monthlyInterestRate * Math.pow(1 + monthlyInterestRate, termMonths)) /
-            (Math.pow(1 + monthlyInterestRate, termMonths) - 1);
-
-        const loan = await Loan.create({
-            userId,
-            amount,
-            termMonths,
-            interestRate,
-            monthlyPayment,
-            status: 'Pending'
-        });
-
+        const loan = await Loan.create(req.body);
         res.status(201).json(loan);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(400).json({ message: 'Error creating loan', error });
     }
 };
 
-// Update loan status
-const updateLoanStatus = async (req, res) => {
+// Update a loan
+exports.updateLoan = async (req, res) => {
     try {
-        const { status } = req.body;
-        const loan = await Loan.findByPk(req.params.id);
-
-        if (!loan) {
-            return res.status(404).json({ message: 'Loan not found' });
-        }
-
-        loan.status = status;
-        await loan.save();
-
-        res.json(loan);
+        const loan = await Loan.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        if (!loan) return res.status(404).json({ message: 'Loan not found' });
+        res.status(200).json(loan);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(400).json({ message: 'Error updating loan', error });
     }
 };
 
-// Get user's loans
-const getUserLoans = async (req, res) => {
+// Delete a loan
+exports.deleteLoan = async (req, res) => {
     try {
-        const userId = req.user.id; // Assuming user info is added by auth middleware
-        const loans = await Loan.findAll({
-            where: { userId }
-        });
-        res.json(loans);
+        const loan = await Loan.findByIdAndDelete(req.params.id);
+        if (!loan) return res.status(404).json({ message: 'Loan not found' });
+        res.status(200).json({ message: 'Loan deleted successfully' });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ message: 'Server error', error });
     }
-};
-
-module.exports = {
-    getAllLoans,
-    getLoanById,
-    applyLoan,
-    updateLoanStatus,
-    getUserLoans
 };

@@ -1,5 +1,5 @@
-﻿using LoanManagement.API.Data.Repositories;
-using LoanManagement.API.Models;
+﻿using LoanManagement.API.Models;
+using LoanManagement.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,50 +10,69 @@ namespace LoanManagement.API.Controllers
     [Authorize(Roles = "Admin")]
     public class UsersController : ControllerBase
     {
-        private readonly IUserRepository _userRepository;
+        private readonly MongoDBService _mongoDBService;
 
-        public UsersController(IUserRepository userRepository)
+        public UsersController(MongoDBService mongoDBService)
         {
-            _userRepository = userRepository;
+            _mongoDBService = mongoDBService;
         }
 
         [HttpGet]
-        public async Task<ActionResult<ApiResponse<IEnumerable<User>>>> GetAllUsers()
+        public async Task<ActionResult<IEnumerable<User>>> GetAllUsers()
         {
-            var users = await _userRepository.GetAllAsync();
-
-            // Don't return passwords
-            var sanitizedUsers = users.Select(u => new
+            var users = await _mongoDBService.GetUsersAsync();
+            return Ok(users.Select(u => new
             {
                 u.Id,
                 u.Name,
                 u.Email,
                 u.Role
-            });
-
-            return Ok(ApiResponse<object>.SuccessResponse(sanitizedUsers, "Users retrieved successfully"));
+            }));
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<ApiResponse<User>>> GetUser(Guid id)
+        public async Task<ActionResult<User>> GetUser(string id)
         {
-            var user = await _userRepository.GetByIdAsync(id);
-
+            var user = await _mongoDBService.GetUserByIdAsync(id);
             if (user == null)
-            {
-                return NotFound(ApiResponse<User>.ErrorResponse("User not found"));
-            }
+                return NotFound(new { message = "User not found" });
 
-            // Don't return password
-            var sanitizedUser = new
+            return Ok(new
             {
                 user.Id,
                 user.Name,
                 user.Email,
                 user.Role
-            };
+            });
+        }
 
-            return Ok(ApiResponse<object>.SuccessResponse(sanitizedUser, "User retrieved successfully"));
+        [HttpPost]
+        public async Task<IActionResult> CreateUser([FromBody] User user)
+        {
+            await _mongoDBService.CreateUserAsync(user);
+            return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateUser(string id, [FromBody] User user)
+        {
+            var existingUser = await _mongoDBService.GetUserByIdAsync(id);
+            if (existingUser == null)
+                return NotFound(new { message = "User not found" });
+
+            await _mongoDBService.UpdateUserAsync(id, user);
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteUser(string id)
+        {
+            var existingUser = await _mongoDBService.GetUserByIdAsync(id);
+            if (existingUser == null)
+                return NotFound(new { message = "User not found" });
+
+            await _mongoDBService.DeleteUserAsync(id);
+            return NoContent();
         }
     }
 }

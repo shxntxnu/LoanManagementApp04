@@ -1,27 +1,26 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace LoanManagement.API.Models
 {
     public class User
     {
-        [Key]
-        public Guid Id { get; set; }
-        
+        [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string Id { get; set; }
+
         [Required]
         [StringLength(100)]
-        public required string Name { get; set; }
-        
+        public string Name { get; set; }
+
         [Required]
-        [EmailAddress]
-        public required string Email { get; set; }
-        
+        public string Email { get; set; }
+
         [Required]
-        public required string Password { get; set; } // Will store hashed password
-        
+        public string Password { get; set; }
+
         [Required]
-        public required string Role { get; set; } // Admin, Borrower, Loan Officer
-        
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public DateTime? LastLoginAt { get; set; }
+        public string Role { get; set; }
     }
 }

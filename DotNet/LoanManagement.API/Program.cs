@@ -22,6 +22,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 // Add services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddSingleton<MongoDBService>();
 
 // Add JWT Authentication
 builder.Services.AddAuthentication(options =>

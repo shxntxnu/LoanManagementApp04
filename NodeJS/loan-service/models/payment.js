@@ -1,57 +1,40 @@
-const { DataTypes } = require('sequelize');
-const { sequelize } = require('../config/db');
+const mongoose = require('mongoose');
 
-const Payment = sequelize.define('Payment', {
-    id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
-        primaryKey: true
-    },
+const paymentSchema = new mongoose.Schema({
     loanId: {
-        type: DataTypes.UUID,
-        allowNull: false,
-        field: 'loan_id',
-        references: {
-            model: 'loans',
-            key: 'id'
-        }
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Loan',
+        required: true
     },
     amount: {
-        type: DataTypes.DECIMAL(10, 2),
-        allowNull: false,
-        validate: {
-            min: 0
-        }
+        type: Number,
+        required: true,
+        min: 0
     },
     status: {
-        type: DataTypes.ENUM('Pending', 'Completed', 'Failed'),
-        defaultValue: 'Pending',
-        allowNull: false
+        type: String,
+        enum: ['Pending', 'Completed', 'Failed'],
+        default: 'Pending',
+        required: true
     },
     dueDate: {
-        type: DataTypes.DATE,
-        allowNull: false,
-        field: 'due_date'
+        type: Date,
+        required: true
     },
     paidAt: {
-        type: DataTypes.DATE,
-        allowNull: true,
-        field: 'paid_at'
+        type: Date,
+        default: null
     },
     createdAt: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-        field: 'created_at'
+        type: Date,
+        default: Date.now
     },
     updatedAt: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-        field: 'updated_at'
+        type: Date,
+        default: Date.now
     }
 }, {
-    tableName: 'payments',
-    timestamps: true,
-    underscored: true
+    timestamps: true
 });
 
-module.exports = Payment; 
+module.exports = mongoose.model('Payment', paymentSchema);
