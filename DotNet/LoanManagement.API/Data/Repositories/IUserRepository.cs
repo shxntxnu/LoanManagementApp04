@@ -1,13 +1,15 @@
 ﻿using LoanManagement.API.Models;
+using System.Threading.Tasks;
 
 namespace LoanManagement.API.Data.Repositories
 {
     public interface IUserRepository
     {
-        Task<User?> GetByIdAsync(Guid id);
+        Task<User?> GetByIdAsync(string id);
         Task<User?> GetByEmailAsync(string email);
         Task<IEnumerable<User>> GetAllAsync();
-        Task<User> CreateAsync(User user);
-        Task<bool> EmailExistsAsync(string email);
+        Task AddAsync(User user);
+        Task UpdateAsync(string id, User user);
+        Task DeleteAsync(string id);
     }
 }

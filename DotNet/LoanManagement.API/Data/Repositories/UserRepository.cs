@@ -1,43 +1,45 @@
 ﻿using LoanManagement.API.Models;
-using Microsoft.EntityFrameworkCore;
+using MongoDB.Driver;
 
 namespace LoanManagement.API.Data.Repositories
 {
     public class UserRepository : IUserRepository
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IMongoCollection<User> _userCollection;
 
-        public UserRepository(ApplicationDbContext context)
+        public UserRepository(IMongoDatabase database)
         {
-            _context = context;
+            _userCollection = database.GetCollection<User>("Users");
         }
 
-        public async Task<User?> GetByIdAsync(Guid id)
+        public async Task<User?> GetByIdAsync(string id)
         {
-            return await _context.Users.FindAsync(id);
+            return await _userCollection.Find(user => user.Id == id).FirstOrDefaultAsync();
         }
 
         public async Task<User?> GetByEmailAsync(string email)
         {
-            return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            return await _userCollection.Find(user => user.Email == email).FirstOrDefaultAsync();
         }
 
         public async Task<IEnumerable<User>> GetAllAsync()
         {
-            return await _context.Users.ToListAsync();
+            return await _userCollection.Find(_ => true).ToListAsync();
         }
 
-        public async Task<User> CreateAsync(User user)
+        public async Task AddAsync(User user)
         {
-            user.Id = Guid.NewGuid();
-            await _context.Users.AddAsync(user);
-            await _context.SaveChangesAsync();
-            return user;
+            await _userCollection.InsertOneAsync(user);
         }
 
-        public async Task<bool> EmailExistsAsync(string email)
+        public async Task UpdateAsync(string id, User user)
         {
-            return await _context.Users.AnyAsync(u => u.Email == email);
+            await _userCollection.ReplaceOneAsync(u => u.Id == id, user);
+        }
+
+        public async Task DeleteAsync(string id)
+        {
+            await _userCollection.DeleteOneAsync(user => user.Id == id);
         }
     }
 }
