@@ -1,78 +1,92 @@
-﻿using LoanManagement.API.Data;
-using LoanManagement.API.Models;
-using Microsoft.EntityFrameworkCore;
+﻿using LoanManagement.API.Models;
+using LoanManagement.API.Data.Repositories;
+using MongoDB.Bson;
 
 namespace LoanManagement.API.Services
 {
     public class AuthService : IAuthService
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IUserRepository _userRepository;
         private readonly IJwtService _jwtService;
 
-        public AuthService(ApplicationDbContext context, IJwtService jwtService)
+        public AuthService(IUserRepository userRepository, IJwtService jwtService)
         {
-            _context = context;
+            _userRepository = userRepository;
             _jwtService = jwtService;
-        }
-
-        public async Task<AuthResponse?> LoginAsync(LoginRequest request)
-        {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
-            
-            if (user == null)
-                return null;
-
-            if (!BCrypt.Net.BCrypt.Verify(request.Password, user.Password))
-                return null;
-
-            // Update last login
-            user.LastLoginAt = DateTime.UtcNow;
-            await _context.SaveChangesAsync();
-
-            // Generate JWT token
-            var token = _jwtService.GenerateToken(user);
-
-            return new AuthResponse
-            {
-                UserId = user.Id, // No need to convert between Guid and string
-                Name = user.Name,
-                Email = user.Email,
-                Role = user.Role,
-                Token = token
-            };
         }
 
         public async Task<AuthResponse?> RegisterAsync(RegisterRequest request)
         {
-            // Check if user already exists
-            if (await _context.Users.AnyAsync(u => u.Email == request.Email))
+            try
+            {
+                // Validate if user already exists
+                var existingUser = await _userRepository.GetByEmailAsync(request.Email);
+                if (existingUser != null)
+                {
+                    return null;
+                }
+
+                // Create new user
+                var user = new User
+                {
+                    Id = ObjectId.GenerateNewId().ToString(),
+                    Name = request.Name ?? throw new ArgumentNullException(nameof(request.Name)),
+                    Email = request.Email ?? throw new ArgumentNullException(nameof(request.Email)),
+                    Password = BCrypt.Net.BCrypt.HashPassword(request.Password),
+                    Role = request.Role ?? "Borrower"
+                };
+
+                await _userRepository.AddAsync(user);
+
+                // Generate JWT token
+                var token = _jwtService.GenerateToken(user);
+
+                return new AuthResponse
+                {
+                    Token = token,
+                    User = new UserDto
+                    {
+                        Id = user.Id,
+                        Name = user.Name,
+                        Email = user.Email,
+                        Role = user.Role
+                    }
+                };
+            }
+            catch
+            {
                 return null;
+            }
+        }
 
-            // Create new user
-            var user = new User
+        public async Task<AuthResponse?> LoginAsync(LoginRequest request)
+        {
+            try
             {
-                Id = Guid.NewGuid(),
-                Name = request.Name,
-                Email = request.Email,
-                Password = BCrypt.Net.BCrypt.HashPassword(request.Password),
-                Role = request.Role.ToString(),
-                CreatedAt = DateTime.UtcNow
-            };
+                var user = await _userRepository.GetByEmailAsync(request.Email);
+                if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.Password))
+                {
+                    return null;
+                }
 
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
+                var token = _jwtService.GenerateToken(user);
 
-            // Generate JWT token
-            var token = _jwtService.GenerateToken(user);
-
-            return new AuthResponse
+                return new AuthResponse
+                {
+                    Token = token,
+                    User = new UserDto
+                    {
+                        Id = user.Id,
+                        Name = user.Name,
+                        Email = user.Email,
+                        Role = user.Role
+                    }
+                };
+            }
+            catch
             {
-                UserId = user.Id, // No need to convert between Guid and string
-                Name = user.Name,
-                Email = user.Email,
-                Role = user.Role,
-                Token = token
-            };
+                return null;
+            }
         }
     }
 }

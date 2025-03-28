@@ -18,22 +18,27 @@ namespace LoanManagement.API.Services
 
         public string GenerateToken(User user)
         {
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? "defaultKeyForDevelopmentPurposesOnly123!"));
-            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            if (user == null) throw new ArgumentNullException(nameof(user));
+            if (string.IsNullOrEmpty(user.Id)) throw new ArgumentException("User ID cannot be null or empty");
+            if (string.IsNullOrEmpty(user.Email)) throw new ArgumentException("User Email cannot be null or empty");
+            if (string.IsNullOrEmpty(user.Role)) throw new ArgumentException("User Role cannot be null or empty");
 
             var claims = new[]
             {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.Name),
+                new Claim(ClaimTypes.NameIdentifier, user.Id),
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim(ClaimTypes.Role, user.Role)
             };
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? 
+                throw new InvalidOperationException("JWT Key not found in configuration")));
+            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],
                 audience: _configuration["Jwt:Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddDays(7),
+                expires: DateTime.Now.AddDays(1),
                 signingCredentials: credentials
             );
 

@@ -17,6 +17,11 @@ namespace LoanManagement.API.Data.Repositories
             return await _userCollection.Find(user => user.Id == id).FirstOrDefaultAsync();
         }
 
+        public async Task<User?> GetByEmailAsync(string email)
+        {
+            return await _userCollection.Find(user => user.Email == email).FirstOrDefaultAsync();
+        }
+
         public async Task<IEnumerable<User>> GetAllAsync()
         {
             return await _userCollection.Find(_ => true).ToListAsync();
